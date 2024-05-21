@@ -4,10 +4,12 @@ package org.example.Server;
 
 import org.example.Client.RMIClient;
 
+import java.net.InetAddress;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Map;
 import java.util.Scanner;
 
 /**
@@ -35,12 +37,13 @@ public class Server extends AbstractServerFunctionClass {
         RMIServer skeleton = (RMIServer) UnicastRemoteObject.exportObject(server, 0);
         Registry registry = LocateRegistry.createRegistry(portNumber);
         System.out.println("Employee is listening on port " + portNumber);
+        registry.rebind("RMIServer", skeleton);
+        String ipAddress = InetAddress.getLocalHost().getHostAddress();
         Scanner sc = new Scanner(System.in);
         String name = promptForName(sc);
-        registry.rebind("RMIServer", skeleton);
         //shutdown hook to notify the manager when the server is about to terminate
         addShutdownHook(skeleton, name, portNumber);
-        skeleton.sendEmployeeDetails(name, portNumber); // Send employee details to manager
+        skeleton.sendEmployeeDetails(name, portNumber, ipAddress); // Send employee details to manager
         System.out.println("Hello " + name +"\tyou can start you job !");
        /*
               // new thread that updates the remote reference periodically
@@ -92,5 +95,6 @@ public class Server extends AbstractServerFunctionClass {
             }
         }
     }
+
 
 }
