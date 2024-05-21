@@ -2,7 +2,8 @@ package org.example.Client;
 
 import org.example.EmployeeInfo;
 import org.example.Server.RMIServer;
-
+import java.io.*;
+import java.net.Socket;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -55,6 +56,10 @@ public class Manager extends AbstractClientFunctionClass {
                         captureWebcamImage(sc, stub, registry,temporaryName);
                         printMenu(); // Print the menu after capturing webcam image
                         break;
+                    case "MESSAGE":
+                        sendMessageToEmployee(sc, stub);
+                        printMenu(); // Print the menu after sending message
+                        break;
                     case "EXIT":
                         System.out.println("Manager disconnected");
                         return;
@@ -80,6 +85,7 @@ public class Manager extends AbstractClientFunctionClass {
         System.out.println("Enter 'report' if you want to see your employees reports");
         System.out.println("Enter 'capture' to capture a client's screen");
         System.out.println("Enter 'webcam' to take live photo for a client");
+        System.out.println("Enter 'message' to send a message to a client");
         System.out.println("Enter 'exit' to exit");
     }
 //    private static void viewActiveEmployees(RMIServer stub) throws RemoteException {
@@ -133,7 +139,8 @@ public class Manager extends AbstractClientFunctionClass {
             } else {
                 System.out.printf("Successfully wrote image to file: %s%n", path);
             }
-        }}
+        }
+}
     private static void captureEmployeeScreen(Scanner sc, RMIServer stub, Registry registry,String temporaryName) throws Exception {
         Map<String, EmployeeInfo> activeEmployees = stub.getActiveEmployees();
         if (activeEmployees.isEmpty()) {
@@ -159,9 +166,57 @@ public class Manager extends AbstractClientFunctionClass {
                 } else {
                     System.out.printf("Successfully wrote image to file: %s%n", path);
                 }
+            }}
+    private static void sendMessageToEmployee(Scanner sc, RMIServer stub) throws Exception {
+        Map<String, String> employeeIPs = stub.getEmployeeIPs();
+        if (employeeIPs.isEmpty()) {
+            System.out.println("No active Employee");
+        } else {
+            for (Map.Entry<String, String> entry : employeeIPs.entrySet()) {
+                System.out.println(". Employee: " + entry.getKey() + " is active now on IP: " + entry.getValue());
+            }
+
+            System.out.println("Enter the name of the employee to chat with:");
+            String name = sc.next();
+            String ipAddress = employeeIPs.get(name);
+
+            if (ipAddress != null) {
+                try (Socket socket = new Socket(ipAddress, 12345);
+                     PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                     BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
+                    sc.nextLine();
+
+                    while (true) {
+                        System.out.println("Enter your message to " + name + " (write 'exit' to stop):");
+                        String message = sc.nextLine();
+
+                        if ("exit".equalsIgnoreCase(message)) {
+                            System.out.println("Ending chat with " + name);
+                            break;
+                        }
+
+                        out.println(message);
+                        System.out.println("Message sent to " + name + " at " + ipAddress);
+
+                        String reply = in.readLine();
+                        if (reply != null) {
+                            System.out.println("Reply from " + name + ": " + reply);
+                        }
+                    }
+                } catch (IOException e) {
+                    System.out.println("Failed to chat with " + name + ": " + e.getMessage());
+                }
+            } else {
+                System.out.println("Employee not found.");
             }
         }
     }
+}
+
+
+
+  //  }
 
 //            new Thread(() -> {
 //                while (true) {

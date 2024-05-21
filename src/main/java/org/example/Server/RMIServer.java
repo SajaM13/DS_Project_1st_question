@@ -15,12 +15,12 @@ import java.util.Map;
  */
 public interface RMIServer extends Remote{
     void registerManager(RMIClient manager, int portNumber) throws RemoteException;;
-    void sendEmployeeDetails(String name, int portNumber) throws RemoteException;
+    void sendEmployeeDetails(String name, int portNumber, String ipAddress) throws RemoteException;
     Map<String, EmployeeInfo> getActiveEmployees() throws RemoteException ;
     void notifyDisconnection(String name, int portNumber) throws RemoteException;
     String getEmployeeReport(String name) throws RemoteException;
     void sendReport(String name, int clientPort, String report) throws RemoteException;
-
+    Map<String, String> getEmployeeIPs() throws RemoteException;
     byte[] captureScreen() throws RemoteException, AWTException;
     byte[] captureWebcamImage()  throws RemoteException, AWTException, IOException;
 
