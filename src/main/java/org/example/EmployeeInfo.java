@@ -8,7 +8,7 @@ public class EmployeeInfo implements Serializable {
     private RMIClient client;
     private int portNumber;
 
-    public EmployeeInfo(RMIClient client, int portNumber) {
+    public EmployeeInfo(int portNumber) {
         this.client = client;
         this.portNumber = portNumber;
     }
@@ -22,10 +22,9 @@ public class EmployeeInfo implements Serializable {
     }
     @Override
     public String toString() {
-        return "EmployeeInfo{" +
-                "client=" + client +
-                ", portNumber=" + portNumber +
-                '}';
+        return
+                "" + portNumber
+               ;
     }
 
 }
