@@ -26,19 +26,9 @@ public class Manager extends AbstractClientFunctionClass {
             int clientPort = Integer.parseInt(args[1]);
             Registry registry = LocateRegistry.getRegistry(serverAddress, clientPort);
             RMIServer stub = (RMIServer) registry.lookup("RMIServer");
-            /*
-        Exchanging remote object references in RMI can be achieved by having a method in remote interface
-        that allows a client to register itself. When a client registers,
-        it passes its own remote object reference to the server.
-        The server can then use this reference to call back to the client.
-            */
-            String temporaryName = "Manager";
-            Manager manager = new Manager();
-            stub.registerManager(manager, clientPort);
+            System.out.println(stub.passingRemoteObject());
             System.out.println("Manager is running");
             Scanner sc = new Scanner(System.in);
-
-            RMIServer finalStub = stub;
             printMenu(); // Print the menu once at the start
 
             while (true) {
@@ -49,15 +39,15 @@ public class Manager extends AbstractClientFunctionClass {
                         printMenu(); // Print the menu after viewing reports
                         break;
                     case "CAPTURE":
-                        captureEmployeeScreen(sc, stub, registry,temporaryName);
+                        captureEmployeeScreen(sc, stub);
                         printMenu(); // Print the menu after capturing screen
                         break;
                     case "WEBCAM":
-                        captureWebcamImage(sc, stub, registry,temporaryName);
+                        captureWebcamImage(sc, stub);
                         printMenu(); // Print the menu after capturing webcam image
                         break;
                     case "MESSAGE":
-                        sendMessageToEmployee(sc, stub);
+                        sendMessageToEmployee(sc, stub,5001);
                         printMenu(); // Print the menu after sending message
                         break;
                     case "EXIT":
@@ -88,18 +78,6 @@ public class Manager extends AbstractClientFunctionClass {
         System.out.println("Enter 'message' to send a message to a client");
         System.out.println("Enter 'exit' to exit");
     }
-//    private static void viewActiveEmployees(RMIServer stub) throws RemoteException {
-//        Map<String, Integer> activeEmployees = stub.getActiveEmployees();
-//        if (activeEmployees.isEmpty()) {
-//            System.out.println("non of employees is active");
-//        } else {
-//            int i = 1;
-//            for (Map.Entry<String, Integer> entry : activeEmployees.entrySet()) {
-//                System.out.println(i + ". Employee: " + entry.getKey() + "\tis active on port: " + entry.getValue());
-//                i++;
-//            }
-//        }
-//    }
     private static void viewEmployeeReports(RMIServer stub) throws RemoteException {
         Map<String, EmployeeInfo> activeEmployees = stub.getActiveEmployees();
         if (activeEmployees.isEmpty()) {
@@ -111,16 +89,16 @@ public class Manager extends AbstractClientFunctionClass {
             }
         }
     }
-    private static void captureWebcamImage(Scanner sc, RMIServer stub, Registry registry, String temporaryName) throws Exception {
+    private static void captureWebcamImage(Scanner sc, RMIServer stub) throws Exception {
         Map<String, EmployeeInfo> activeEmployees = stub.getActiveEmployees();
         if (activeEmployees.isEmpty()) {
             System.out.println("No active Employee");
         } else {
             int i = 1;
-            List<String> employeeNames = new ArrayList<>();
+//            List<String> employeeNames = new ArrayList<>();
             for (Map.Entry<String, EmployeeInfo> entry : activeEmployees.entrySet()) {
-                System.out.println(". Employee: " + entry.getKey() + "\tis active now on port: " + entry.getValue().getPortNumber());
-                employeeNames.add(entry.getKey());
+                System.out.println(". Employee: " + entry.getKey() + "\tis active now on port: " + entry.getValue());
+//                employeeNames.add(entry.getKey());
                 i++;
             }
 
@@ -141,7 +119,7 @@ public class Manager extends AbstractClientFunctionClass {
             }
         }
 }
-    private static void captureEmployeeScreen(Scanner sc, RMIServer stub, Registry registry,String temporaryName) throws Exception {
+    private static void captureEmployeeScreen(Scanner sc, RMIServer stub) throws Exception {
         Map<String, EmployeeInfo> activeEmployees = stub.getActiveEmployees();
         if (activeEmployees.isEmpty()) {
             System.out.println("No active Employee");
@@ -167,7 +145,7 @@ public class Manager extends AbstractClientFunctionClass {
                     System.out.printf("Successfully wrote image to file: %s%n", path);
                 }
             }}
-    private static void sendMessageToEmployee(Scanner sc, RMIServer stub) throws Exception {
+    private static void sendMessageToEmployee(Scanner sc, RMIServer stub,int clientPort) throws Exception {
         Map<String, String> employeeIPs = stub.getEmployeeIPs();
         if (employeeIPs.isEmpty()) {
             System.out.println("No active Employee");
@@ -181,7 +159,7 @@ public class Manager extends AbstractClientFunctionClass {
             String ipAddress = employeeIPs.get(name);
 
             if (ipAddress != null) {
-                try (Socket socket = new Socket(ipAddress, 12345);
+                try (Socket socket = new Socket(ipAddress, clientPort);
                      PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                      BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
@@ -214,8 +192,16 @@ public class Manager extends AbstractClientFunctionClass {
     }
 }
 
+//مسار لحفظ الصورة
+//C:\Users\asus\Desktop\cam.png //camera
+//C:\Users\asus\Desktop\sc.png //screen
 
 
+
+
+
+
+//------------------------------------------------------
   //  }
 
 //            new Thread(() -> {
@@ -228,3 +214,16 @@ public class Manager extends AbstractClientFunctionClass {
 //                    }
 //                }
 //            }).start();
+//---------------------------
+//
+//            Registry registry = LocateRegistry.getRegistry(serverAddress, clientPort);
+//            RMIServer stub = (RMIServer) registry.lookup("RMIServer");
+            /*
+        Exchanging remote object references in RMI can be achieved by having a method in remote interface
+        that allows a client to register itself. When a client registers,
+        it passes its own remote object reference to the server.
+        The server can then use this reference to call back to the client.
+            */
+//String temporaryName = "Manager";
+//    Manager manager = new Manager();
+////            stub.registerManager(manager, clientPort);

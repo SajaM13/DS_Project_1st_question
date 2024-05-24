@@ -10,7 +10,7 @@ import java.util.Scanner;
 
 public class EmployeeChat {
     public static void main(String[] args) {
-        int port = 12345;
+        int port = 5000;
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Listening for messages on port " + port);

@@ -5,6 +5,7 @@ import org.example.EmployeeInfo;
 
 import java.awt.*;
 import java.io.IOException;
+import java.net.Socket;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.Map;
@@ -14,8 +15,12 @@ import java.util.Map;
  * client through a remote object.
  */
 public interface RMIServer extends Remote{
+    String passingRemoteObject() throws RemoteException;
+
     void registerManager(RMIClient manager, int portNumber) throws RemoteException;;
     void sendEmployeeDetails(String name, int portNumber, String ipAddress) throws RemoteException;
+//    void handleSocketConnections(int socketPort);
+//    void handleManagerCommunication(Socket clientSocket);
     Map<String, EmployeeInfo> getActiveEmployees() throws RemoteException ;
     void notifyDisconnection(String name, int portNumber) throws RemoteException;
     String getEmployeeReport(String name) throws RemoteException;

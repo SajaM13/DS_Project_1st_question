@@ -10,8 +10,9 @@ import org.opencv.videoio.VideoCapture;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.rmi.RemoteException;
 import java.rmi.server.RemoteObject;
 import java.util.*;
@@ -19,31 +20,52 @@ import java.util.*;
 //static {
 //        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 //        }
-public abstract class AbstractServerFunctionClass extends RemoteObject implements RMIServer {
+public class AbstractServerFunctionClass extends RemoteObject implements RMIServer {
     private final Map<String, String> employeeReports = new HashMap<>();
     private Map<String, EmployeeInfo> employees = new HashMap<>();
     private Map<String, String> employeeIPs = new HashMap<>();
     private RMIClient managerClient;
     private int managerPort;
+    public String passingRemoteObject() throws RemoteException {
+        return "Hello from the employee! remote object has been exchanged";
+    }
 
     public void registerManager(RMIClient manager, int portNumber) throws RemoteException {
         this.managerClient = manager;
         this.managerPort = portNumber;
         System.out.println("Manager registered on port " + portNumber);
     }
-
     public synchronized void sendEmployeeDetails(String name, int portNumber, String ipAddress) throws RemoteException {
         EmployeeInfo info = employees.get(name);
         if (info != null) {
             System.out.println("Client: " + name + " is active now !");
+        } else {
+            // Create a new EmployeeInfo object with the provided portNumber
+            EmployeeInfo newInfo = new EmployeeInfo(portNumber);
+
+            // Add the new EmployeeInfo object to the employees map
+            employees.put(name, newInfo);
         }
         employeeIPs.put(name, ipAddress);
     }
-
+    public synchronized Map<String, String> getEmployeeIPs() throws RemoteException {
+        return new HashMap<>(employeeIPs);
+    }
     public synchronized Map<String, EmployeeInfo> getActiveEmployees() throws RemoteException {
         // Return a copy of the map to avoid exposing the internal data structure
         return new HashMap<>(employees);
     }
+
+
+//    public synchronized void sendEmployeeDetails(String name, int portNumber, String ipAddress) throws RemoteException {
+//        EmployeeInfo info = employees.get(name);
+//        if (info != null) {
+//            System.out.println("Client: " + name + " is active now !");
+//        }
+//        employeeIPs.put(name, ipAddress);
+//    }
+
+
     public synchronized void notifyDisconnection(String name, int portNumber) throws RemoteException {
         employees.remove(name);
     }
@@ -72,7 +94,10 @@ public abstract class AbstractServerFunctionClass extends RemoteObject implement
         return baos.toByteArray();
     }
     public byte[] captureWebcamImage() throws RemoteException, IOException {
-        System.load("C:\\Users\\HP\\Downloads\\opencv\\build\\java\\x64\\opencv_java490.dll");
+        //saja
+        System.load("C:\\Users\\asus\\Downloads\\opencv\\build\\java\\x64\\opencv_java490.dll");
+        //raghad
+//        System.load("C:\\Users\\HP\\Downloads\\opencv\\build\\java\\x64\\opencv_java490.dll");
         VideoCapture capture = new VideoCapture(0);
         Mat image = new Mat();
         byte[] imageData = null;
@@ -105,16 +130,6 @@ public abstract class AbstractServerFunctionClass extends RemoteObject implement
             }
         }
         return report.trim();  // Remove the trailing space
-    }
-//    public void updateClientName(String oldName, String newName) throws RemoteException {
-//        RMIClient client = employees.remove(oldName);
-//        if (client != null) {
-//            employees.put(newName, client);
-//        }
-//    }
-
-    public synchronized Map<String, String> getEmployeeIPs() throws RemoteException {
-        return new HashMap<>(employeeIPs);
     }
 
 }
