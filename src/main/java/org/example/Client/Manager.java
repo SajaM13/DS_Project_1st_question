@@ -8,6 +8,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.rmi.ConnectException;
+import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -18,57 +20,92 @@ import java.util.Map;
 import java.util.Scanner;
 
 public class Manager extends AbstractClientFunctionClass {
+    private static RMIServer stub;
+    private static Registry registry;
+
     public Manager() throws RemoteException {
     }
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         try {
             String serverAddress = args[0];
             int clientPort = Integer.parseInt(args[1]);
-            Registry registry = LocateRegistry.getRegistry(serverAddress, clientPort);
-            RMIServer stub = (RMIServer) registry.lookup("RMIServer");
+            registry = LocateRegistry.getRegistry(serverAddress, clientPort);
+            stub = (RMIServer) registry.lookup("RMIServer");
             System.out.println(stub.passingRemoteObject());
             System.out.println("Manager is running");
             Scanner sc = new Scanner(System.in);
             printMenu(); // Print the menu once at the start
 
             while (true) {
-                String clientMessage = sc.nextLine().toUpperCase();
-                switch (clientMessage) {
-                    case "REPORT":
-                        viewEmployeeReports(stub);
-                        printMenu(); // Print the menu after viewing reports
-                        break;
-                    case "CAPTURE":
-                        captureEmployeeScreen(sc, stub);
-                        printMenu(); // Print the menu after capturing screen
-                        break;
-                    case "WEBCAM":
-                        captureWebcamImage(sc, stub);
-                        printMenu(); // Print the menu after capturing webcam image
-                        break;
-                    case "MESSAGE":
-                        sendMessageToEmployee(sc, stub,5001);
-                        printMenu(); // Print the menu after sending message
-                        break;
-                    case "EXIT":
-                        System.out.println("Manager disconnected");
-                        return;
-                    default:
-                        // If command is not recognized, try to update the remote reference
-                        try {
-                            stub = (RMIServer) registry.lookup("RMIServer");
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        break;
+                try {
+                    String clientMessage = sc.nextLine().toUpperCase();
+                    switch (clientMessage) {
+                        case "REPORT":
+                            updateStub();
+                            try {
+                                viewEmployeeReports(stub);
+                            }  catch (NoSuchObjectException | ConnectException e) {
+                    }
+                            printMenu();
+                            break;
+
+                        case "CAPTURE":
+                            updateStub();
+
+                            try {
+                                captureEmployeeScreen(sc, stub);
+                            } catch (NoSuchObjectException | ConnectException e) {
+                    }
+                            printMenu(); // Print the menu after capturing screen
+                            break;
+                        case "WEBCAM":
+                            updateStub();
+
+                            try {
+                                captureWebcamImage(sc, stub);
+                            } catch (NoSuchObjectException | ConnectException e) {
+                            }
+                            printMenu(); // Print the menu after capturing webcam image
+                            break;
+                        case "MESSAGE":
+                            updateStub();
+                            try {
+                                sendMessageToEmployee(sc, stub,5001);
+                            } catch (NoSuchObjectException | ConnectException e) {
+                                updateStub();
+                            }
+                            printMenu(); // Print the menu after sending message
+                            break;
+                        case "EXIT":
+                            System.out.println("Manager disconnected");
+                            return;
+                        default:
+                            // If command is not recognized, try to update the remote reference
+                            try {
+                                stub = (RMIServer) registry.lookup("RMIServer");
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            break;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
+        } finally {
 
-
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
+
+        private static void updateStub() {
+            System.out.println("Remote object has been unexported, updating reference...");
+            try {
+                stub = (RMIServer) registry.lookup("RMIServer");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+
     private static void printMenu() {
         System.out.println("Hello Manager !");
 //        System.out.println("Enter 'view' to see active employees on system");
