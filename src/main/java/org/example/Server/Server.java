@@ -13,11 +13,18 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.RemoteException;
+import java.rmi.UnknownHostException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.RemoteServer;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+//import static sun.rmi.transport.tcp.TCPTransport.getClientHost;
 
 /**
  * An RMI Server to implement the remote RMI interface and extend the abstract
@@ -38,34 +45,53 @@ public class Server extends AbstractServerFunctionClass {
             System.out.println("provide a port number as an argument.");
         }
     }
+
     private static void setupEmployee(String[] args) throws Exception {
         if (args.length < 1) {
             System.err.println("Usage: java Server <port>");
             System.exit(1);
         }
 
-
         int portNumber = Integer.parseInt(args[0]);
         Server server = new Server();
-//        //
-//        RMIServer skeleton = (RMIServer) UnicastRemoteObject.exportObject(server, 0);
-//        Registry registry = LocateRegistry.createRegistry(portNumber);
-//        System.out.println("Employee is listening on port " + portNumber);
-//        registry.rebind("RMIServer", skeleton);
-//        //
-//        System.setProperty("java.rmi.server.hostname", "employee.example.com");
         System.setProperty("java.rmi.server.hostname", "localhost");
         RMIServer service = new AbstractServerFunctionClass();
         RMIServer skeleton = (RMIServer) UnicastRemoteObject.exportObject(service, 0);
         Registry registry = LocateRegistry.createRegistry(portNumber);
         registry.rebind("RMIServer", skeleton);
         System.out.println("Employee server ready.");
-        String ipAddress = InetAddress.getLocalHost().getHostAddress();
+        final String[] ipAddress = {InetAddress.getLocalHost().getHostAddress()};
+
+        System.out.println("your ipAddress is :" + ipAddress[0]);
+        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+        executorService.scheduleAtFixedRate(() -> {
+            try {
+                String currentIpAddress = InetAddress.getLocalHost().getHostAddress();
+                if (!currentIpAddress.equals(ipAddress[0])) {
+                    System.out.println("IP address has changed from " + ipAddress[0] + " to " + currentIpAddress);
+                    ipAddress[0] = currentIpAddress;
+                    System.out.println("Rebinding RMI server to new IP address: " + ipAddress[0]);
+                    // Unbind the old RMI server
+                    registry.unbind("RMIServer");
+                    // Unexport the old RMI server
+                    UnicastRemoteObject.unexportObject(service, true);
+                    // Rebind the RMI server with the new IP address
+                    System.setProperty("java.rmi.server.hostname", ipAddress[0]);
+                    RMIServer newSkeleton = (RMIServer) UnicastRemoteObject.exportObject(service, 0);
+                    registry.rebind("RMIServer", newSkeleton);
+                    System.out.println("RMI server rebound to new IP address.");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, 0, 1, TimeUnit.MINUTES); // Check every minute
+
+
         Scanner sc = new Scanner(System.in);
         String name = promptForName(sc);
         //shutdown hook to notify the manager when the server is about to terminate
         addShutdownHook(skeleton, name, portNumber);
-        skeleton.sendEmployeeDetails(name, portNumber, ipAddress); // Send employee details to manager
+        skeleton.sendEmployeeDetails(name, portNumber, ipAddress[0]); // Send employee details to manager
         System.out.println("Hello " + name +"\tyou can start you job !");
         printMenu();
         handleSocketConnections(5001);
@@ -163,3 +189,13 @@ public class Server extends AbstractServerFunctionClass {
 
 
 }
+/*   private static void changIpAddress() throws java.net.UnknownHostException {
+        try {
+            InetAddress addr = InetAddress.getLocalHost();
+            String localIP = addr.getHostAddress();
+            System.out.println("Local IP: " + localIP);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }*/
