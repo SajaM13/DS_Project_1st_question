@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
  * server implementation class.
  */
 public class Server extends AbstractServerFunctionClass {
-
+    private static String name;
     public static void main(String[] args) {
         if (args.length > 0) {
             try {
@@ -80,6 +80,7 @@ public class Server extends AbstractServerFunctionClass {
                     RMIServer newSkeleton = (RMIServer) UnicastRemoteObject.exportObject(service, 0);
                     registry.rebind("RMIServer", newSkeleton);
                     System.out.println("RMI server rebound to new IP address.");
+                    newSkeleton.sendEmployeeDetails(name, portNumber, ipAddress[0]);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -88,7 +89,7 @@ public class Server extends AbstractServerFunctionClass {
 
 
         Scanner sc = new Scanner(System.in);
-        String name = promptForName(sc);
+         name = promptForName(sc);
         //shutdown hook to notify the manager when the server is about to terminate
         addShutdownHook(skeleton, name, portNumber);
         skeleton.sendEmployeeDetails(name, portNumber, ipAddress[0]); // Send employee details to manager

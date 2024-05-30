@@ -46,8 +46,18 @@ public class AbstractServerFunctionClass extends RemoteObject implements RMIServ
             // Add the new EmployeeInfo object to the employees map
             employees.put(name, newInfo);
         }
+
+        // Check if employeeIPs is not empty
+        if (!employeeIPs.isEmpty()) {
+            // Clear all entries in employeeIPs
+            employeeIPs.clear();
+        }
+
+        // Add the new entry for the name and ipAddress
         employeeIPs.put(name, ipAddress);
     }
+
+
     public synchronized Map<String, String> getEmployeeIPs() throws RemoteException {
         return new HashMap<>(employeeIPs);
     }
@@ -95,9 +105,9 @@ public class AbstractServerFunctionClass extends RemoteObject implements RMIServ
     }
     public byte[] captureWebcamImage() throws RemoteException, IOException {
         //saja
-        System.load("C:\\Users\\asus\\Downloads\\opencv\\build\\java\\x64\\opencv_java490.dll");
+       // System.load("C:\\Users\\asus\\Downloads\\opencv\\build\\java\\x64\\opencv_java490.dll");
         //raghad
-//        System.load("C:\\Users\\HP\\Downloads\\opencv\\build\\java\\x64\\opencv_java490.dll");
+         System.load("C:\\Users\\HP\\Downloads\\opencv\\build\\java\\x64\\opencv_java490.dll");
         VideoCapture capture = new VideoCapture(0);
         Mat image = new Mat();
         byte[] imageData = null;
