@@ -71,7 +71,7 @@ public class Manager extends AbstractClientFunctionClass {
                  case "MESSAGE":
                      updateStub();
                      try {
-                         sendMessageToEmployee(sc, stub,5020);
+                         sendMessageToEmployee(sc, stub,5001);
                      } catch (NoSuchObjectException | ConnectException e) {
                          updateStub();
                      }

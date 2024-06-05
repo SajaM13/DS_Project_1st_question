@@ -46,8 +46,9 @@ public class server_functions {
         skeleton.sendEmployeeDetails(name, portNumber, ipAddress[0]); // Send employee details to manager
         System.out.println("Hello " + name +"\tyou can start you job !");
         printMenu();
-        handleServerInput(sc, skeleton, name, portNumber);
         handleSocketConnections(5001);
+        handleServerInput(sc, skeleton, name, portNumber);
+
 
     }
     public static void ScheduledServiceForCheckingIPChanging(String[] ipAddress, Registry registry, RMIServer service,int portNumber){
