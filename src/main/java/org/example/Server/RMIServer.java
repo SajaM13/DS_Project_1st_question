@@ -15,9 +15,7 @@ import java.util.Map;
  * client through a remote object.
  */
 public interface RMIServer extends Remote{
-    String passingRemoteObject() throws RemoteException;
 
-    void registerManager(RMIClient manager, int portNumber) throws RemoteException;;
     void sendEmployeeDetails(String name, int portNumber, String ipAddress) throws RemoteException;
 //    void handleSocketConnections(int socketPort);
 //    void handleManagerCommunication(Socket clientSocket);
